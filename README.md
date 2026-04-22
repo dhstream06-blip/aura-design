@@ -2,38 +2,51 @@
 
 ## Files
 - `index.html` — Public portfolio homepage
-- `admin.html` — Password-protected admin dashboard  
+- `admin.html` — Password-protected admin dashboard
 - `client.html` — Client review page (accessed via unique link)
-- `style.css` — All styles (glassmorphism dark UI)
-- `script.js` — All logic (auth, uploads, gallery, annotations)
+- `style.css` — All styles (dark glass UI)
+- `script.js` — All logic (auth, uploads, gallery, annotations, cloud sync)
 
 ## GitHub Pages Deployment
-1. Create a new GitHub repository
-2. Upload all 5 files to the root of the repo
-3. Go to Settings → Pages → Source: `main` branch / `root`
-4. Your site will be at: `https://yourusername.github.io/repo-name/`
+1. Create a new GitHub repository.
+2. Upload all files to the root of the repo.
+3. Open **Settings → Pages** and set source to `main` branch / root.
+4. Website URL will be: `https://yourusername.github.io/repo-name/`.
 
 ## Admin Access
 - Visit `yoursite/admin.html`
 - Password: **1040**
-- Or click "Admin Access" on the homepage
+- Or click "Admin Access" on the homepage.
+
+## Public Internet Storage (important)
+By default, browser `localStorage` is only local to one browser.
+To make uploaded projects visible publicly across devices, enable **GitHub Gist sync** in the admin dashboard:
+
+1. Create a **public gist** in your GitHub account.
+2. Add a file named exactly `projects.json` with content `[]`.
+3. Copy the Gist ID (part of the gist URL).
+4. Create a GitHub Personal Access Token with `gist` scope.
+5. Open `admin.html` and enter:
+   - Gist ID
+   - Token
+6. Click **Save Cloud Settings**.
+
+Now uploads/deletes/feedback are synced to the public gist and can be read on other devices through GitHub Pages.
 
 ## How the Client Link System Works
-1. Admin uploads a design + sets title/client name
-2. A unique ID is generated: `Date.now() + random string`
-3. The client link is: `yoursite/client.html?id=UNIQUE_ID`
-4. The client page reads the `?id=` param and loads from localStorage
-5. Client can add annotations (click anywhere on design), then approve or request changes
-6. All data saved in browser localStorage — no backend needed
+1. Admin uploads a design and enters project title/client name.
+2. A unique project ID is generated: `Date.now() + random string`.
+3. Share link format: `yoursite/client.html?id=UNIQUE_ID`.
+4. Client page reads `?id=` and loads the project.
+5. Client can annotate, approve, or request changes.
+6. Data is saved locally and (if configured) synced to the public gist.
 
 ## Annotation System
-- Client clicks anywhere on the design image to place a numbered marker
-- A popup appears to type a comment for that exact location
-- Markers are stored as `{ x%, y%, comment }` — position is percentage-based so it works on any screen size
-- Admin can see annotation count and client decision in the admin dashboard
+- Client clicks on the design to place a numbered marker.
+- A popup collects the comment for that exact point.
+- Markers are stored as `{ x%, y%, comment }`.
+- Admin sees annotation count and decision in dashboard.
 
-## Limitations (No-backend constraints)
-- All data lives in localStorage — clearing browser storage will erase projects
-- Files are stored as base64 strings — keep uploads under ~5MB for best performance
-- Each browser/device has its own storage — share the link across devices will show the project only if they're on the same browser that uploaded
-- For production use, connect to a backend (Supabase, Firebase) to persist data server-side
+## Security Note
+- The GitHub token is saved in local browser storage to allow direct sync from static pages.
+- For production-level security, move upload/sync logic to a backend service.

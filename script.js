@@ -2,12 +2,13 @@
    AURA DESIGN — Main JavaScript
    Handles: Auth, Project storage, Gallery rendering,
             Admin dashboard, Client page, Annotation system
-   Storage: localStorage (no backend needed)
+   Storage: localStorage + optional public cloud sync (GitHub Gist)
    ============================================================ */
 
 /* ==================== CONSTANTS ==================== */
 const ADMIN_CODE = '1040';
 const STORAGE_KEY = 'aura_projects';
+const CLOUD_CONFIG_KEY = 'aura_cloud_config';
 
 /* ==================== STORAGE HELPERS ==================== */
 
@@ -15,23 +16,42 @@ const STORAGE_KEY = 'aura_projects';
 function getProjects() {
   try {
     return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-  } catch { return []; }
+  } catch {
+    return [];
+  }
 }
 
-/** Save projects array to localStorage */
-function saveProjects(projects) {
+/** Save projects array to localStorage (and sync to cloud when configured) */
+function saveProjects(projects, options = {}) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+  if (!options.skipCloud) {
+    syncProjectsToCloud(projects);
+  }
+}
+
+/** Load cloud config */
+function getCloudConfig() {
+  try {
+    return JSON.parse(localStorage.getItem(CLOUD_CONFIG_KEY) || '{}');
+  } catch {
+    return {};
+  }
+}
+
+/** Save cloud config */
+function setCloudConfig(config) {
+  localStorage.setItem(CLOUD_CONFIG_KEY, JSON.stringify(config || {}));
 }
 
 /** Get a single project by its unique ID */
 function getProject(id) {
-  return getProjects().find(p => p.id === id) || null;
+  return getProjects().find((p) => p.id === id) || null;
 }
 
 /** Update a project by ID */
 function updateProject(id, updates) {
   const projects = getProjects();
-  const idx = projects.findIndex(p => p.id === id);
+  const idx = projects.findIndex((p) => p.id === id);
   if (idx !== -1) {
     projects[idx] = { ...projects[idx], ...updates };
     saveProjects(projects);
@@ -43,6 +63,129 @@ function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
+/* ==================== PUBLIC CLOUD SYNC (GitHub Gist) ==================== */
+
+/**
+ * Optional cloud mode for GitHub Pages:
+ * - Admin stores Gist ID + GitHub token locally in browser
+ * - Projects are written to a PUBLIC gist file `projects.json`
+ * - Any visitor can read those projects by using same gist ID
+ */
+
+function getCloudProjectsURL(gistId) {
+  return `https://api.github.com/gists/${gistId}`;
+}
+
+async function fetchProjectsFromCloud() {
+  const config = getCloudConfig();
+  if (!config.gistId) return null;
+
+  try {
+    const res = await fetch(getCloudProjectsURL(config.gistId), {
+      headers: { Accept: 'application/vnd.github+json' }
+    });
+    if (!res.ok) throw new Error(`Cloud fetch failed (${res.status})`);
+
+    const gist = await res.json();
+    const file = gist.files?.['projects.json'];
+    if (!file?.content) return [];
+
+    const parsed = JSON.parse(file.content);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    console.warn('Cloud fetch error:', err.message);
+    return null;
+  }
+}
+
+async function syncProjectsToCloud(projects) {
+  const config = getCloudConfig();
+  if (!config.gistId || !config.token) return;
+
+  try {
+    const res = await fetch(getCloudProjectsURL(config.gistId), {
+      method: 'PATCH',
+      headers: {
+        Accept: 'application/vnd.github+json',
+        Authorization: `Bearer ${config.token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        files: {
+          'projects.json': {
+            content: JSON.stringify(projects, null, 2)
+          }
+        }
+      })
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Cloud sync failed (${res.status}): ${errText}`);
+    }
+  } catch (err) {
+    console.warn('Cloud sync error:', err.message);
+  }
+}
+
+async function hydrateFromCloud() {
+  const cloudProjects = await fetchProjectsFromCloud();
+  if (cloudProjects) {
+    saveProjects(cloudProjects, { skipCloud: true });
+  }
+}
+
+async function saveCloudSettings() {
+  const gistId = document.getElementById('gistIdInput')?.value.trim();
+  const token = document.getElementById('gistTokenInput')?.value.trim();
+  const status = document.getElementById('cloudStatus');
+
+  if (!gistId) {
+    if (status) status.textContent = 'Please provide a Gist ID.';
+    return;
+  }
+
+  setCloudConfig({ gistId, token });
+  if (status) status.textContent = 'Cloud settings saved locally.';
+
+  // Pull latest cloud data immediately.
+  await hydrateFromCloud();
+  renderAdminGrid();
+  renderGallery();
+}
+
+async function testCloudConnection() {
+  const status = document.getElementById('cloudStatus');
+  if (status) status.textContent = 'Testing connection...';
+
+  const gistId = document.getElementById('gistIdInput')?.value.trim();
+  if (!gistId) {
+    if (status) status.textContent = 'Enter a Gist ID first.';
+    return;
+  }
+
+  try {
+    const res = await fetch(getCloudProjectsURL(gistId), {
+      headers: { Accept: 'application/vnd.github+json' }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    if (status) status.textContent = 'Connection successful. Gist is reachable.';
+  } catch (err) {
+    if (status) status.textContent = `Connection failed: ${err.message}`;
+  }
+}
+
+function loadCloudSettingsUI() {
+  const gistInput = document.getElementById('gistIdInput');
+  const tokenInput = document.getElementById('gistTokenInput');
+  if (!gistInput || !tokenInput) return;
+
+  const config = getCloudConfig();
+  gistInput.value = config.gistId || '';
+  tokenInput.value = config.token || '';
+}
+
 /* ==================== HOMEPAGE ==================== */
 
 /** Render the public gallery grid */
@@ -50,11 +193,11 @@ function renderGallery() {
   const grid = document.getElementById('galleryGrid');
   if (!grid) return;
 
-  const projects = getProjects().filter(p => p.published);
+  const projects = getProjects().filter((p) => p.published);
   const emptyState = document.getElementById('emptyState');
 
   // Clear existing cards (keep empty state el)
-  Array.from(grid.children).forEach(el => {
+  Array.from(grid.children).forEach((el) => {
     if (!el.id) el.remove();
   });
 
@@ -64,7 +207,7 @@ function renderGallery() {
   }
   emptyState.style.display = 'none';
 
-  projects.forEach(project => {
+  projects.forEach((project) => {
     const card = createGalleryCard(project);
     grid.appendChild(card);
   });
@@ -156,9 +299,11 @@ function checkGatePassword() {
   }
 }
 
-function showAdminContent() {
+async function showAdminContent() {
   document.getElementById('passwordGate').style.display = 'none';
   document.getElementById('adminContent').style.display = 'block';
+  loadCloudSettingsUI();
+  await hydrateFromCloud();
   renderAdminGrid();
 }
 
@@ -173,10 +318,14 @@ function setupUploadZone() {
   const fileInput = document.getElementById('fileInput');
   if (!zone || !fileInput) return;
 
-  zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    zone.classList.add('dragover');
+  });
   zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
   zone.addEventListener('drop', (e) => {
-    e.preventDefault(); zone.classList.remove('dragover');
+    e.preventDefault();
+    zone.classList.remove('dragover');
     const file = e.dataTransfer.files[0];
     if (file) handleFileSelected(file);
   });
@@ -189,7 +338,7 @@ function setupUploadZone() {
 let selectedFile = null;
 
 function handleFileSelected(file) {
-  const allowed = ['image/png','image/jpeg','image/gif','image/webp','image/svg+xml','application/pdf'];
+  const allowed = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml', 'application/pdf'];
   if (!allowed.includes(file.type)) {
     alert('Please upload an image (PNG, JPG, GIF, WebP) or PDF file.');
     return;
@@ -211,7 +360,7 @@ function handleFileSelected(file) {
     if (file.type.startsWith('image/')) {
       thumb.innerHTML = `<img src="${data}" alt="preview" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" />`;
     } else {
-      thumb.innerHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);border-radius:6px;font-size:11px;color:var(--text-tertiary);letter-spacing:.1em;">PDF</div>`;
+      thumb.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);border-radius:6px;font-size:11px;color:var(--text-tertiary);letter-spacing:.1em;">PDF</div>';
     }
 
     document.getElementById('uploadZone').style.display = 'none';
@@ -233,8 +382,14 @@ function uploadProject() {
   const title = document.getElementById('projectTitle').value.trim();
   const clientName = document.getElementById('clientName').value.trim();
 
-  if (!title) { alert('Please enter a project title.'); return; }
-  if (!selectedFile) { alert('Please select a file to upload.'); return; }
+  if (!title) {
+    alert('Please enter a project title.');
+    return;
+  }
+  if (!selectedFile) {
+    alert('Please select a file to upload.');
+    return;
+  }
 
   const reader = new FileReader();
   reader.onload = (e) => {
@@ -259,7 +414,7 @@ function uploadProject() {
     saveProjects(projects);
 
     // Show generated link
-    const link = `${window.location.origin}${window.location.pathname.replace('admin.html','')}client.html?id=${id}`;
+    const link = `${window.location.origin}${window.location.pathname.replace('admin.html', '')}client.html?id=${id}`;
     document.getElementById('generatedLink').textContent = link;
     document.getElementById('linkResult').style.display = 'block';
     document.getElementById('linkResult').scrollIntoView({ behavior: 'smooth' });
@@ -279,7 +434,9 @@ function copyLink() {
   navigator.clipboard.writeText(link).then(() => {
     const btn = document.getElementById('copyBtn');
     btn.textContent = 'Copied!';
-    setTimeout(() => btn.textContent = 'Copy', 2000);
+    setTimeout(() => {
+      btn.textContent = 'Copy';
+    }, 2000);
   });
 }
 
@@ -290,7 +447,9 @@ function renderAdminGrid() {
   const projects = getProjects();
   const emptyState = document.getElementById('adminEmptyState');
 
-  Array.from(grid.children).forEach(el => { if (!el.id) el.remove(); });
+  Array.from(grid.children).forEach((el) => {
+    if (!el.id) el.remove();
+  });
 
   if (projects.length === 0) {
     emptyState.style.display = 'flex';
@@ -298,7 +457,7 @@ function renderAdminGrid() {
   }
   emptyState.style.display = 'none';
 
-  projects.forEach(project => {
+  projects.forEach((project) => {
     const card = createAdminCard(project);
     grid.appendChild(card);
   });
@@ -311,9 +470,9 @@ function createAdminCard(project) {
   const statusLabel = { approved: 'Approved', changes: 'Needs Changes', pending: 'Pending' };
   const thumbHTML = project.fileType === 'image'
     ? `<img src="${project.fileData}" alt="${project.title}" />`
-    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-tertiary);font-size:12px;letter-spacing:.1em;">PDF Document</div>`;
+    : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-tertiary);font-size:12px;letter-spacing:.1em;">PDF Document</div>';
 
-  const clientLink = `${window.location.origin}${window.location.pathname.replace('admin.html','')}client.html?id=${project.id}`;
+  const clientLink = `${window.location.origin}${window.location.pathname.replace('admin.html', '')}client.html?id=${project.id}`;
   const annotCount = (project.annotations || []).length;
 
   card.innerHTML = `
@@ -339,7 +498,9 @@ function createAdminCard(project) {
 function copyProjectLink(link, btn) {
   navigator.clipboard.writeText(link).then(() => {
     btn.textContent = 'Copied!';
-    setTimeout(() => btn.textContent = 'Copy Link', 2000);
+    setTimeout(() => {
+      btn.textContent = 'Copy Link';
+    }, 2000);
   });
 }
 
@@ -357,12 +518,14 @@ function closeDeleteModal() {
   pendingDeleteId = null;
   const modal = document.getElementById('deleteModal');
   modal.classList.remove('open');
-  setTimeout(() => modal.style.display = 'none', 300);
+  setTimeout(() => {
+    modal.style.display = 'none';
+  }, 300);
 }
 
 function confirmDelete() {
   if (!pendingDeleteId) return;
-  const projects = getProjects().filter(p => p.id !== pendingDeleteId);
+  const projects = getProjects().filter((p) => p.id !== pendingDeleteId);
   saveProjects(projects);
   closeDeleteModal();
   renderAdminGrid();
@@ -377,10 +540,16 @@ let activeMarkerIdx = null;
 function initClientPage() {
   const params = new URLSearchParams(window.location.search);
   const id = params.get('id');
-  if (!id) { showNotFound(); return; }
+  if (!id) {
+    showNotFound();
+    return;
+  }
 
   const project = getProject(id);
-  if (!project) { showNotFound(); return; }
+  if (!project) {
+    showNotFound();
+    return;
+  }
 
   currentProjectId = id;
   document.title = `${project.title} — Aura Design`;
@@ -455,7 +624,7 @@ function showNotFound() {
  * - Each annotation is stored as: { id, x, y, comment, createdAt }
  * - Markers are rendered as positioned dots on the markers-layer div
  * - Clicking a marker shows the comment in a detail panel
- * - All annotations stored in localStorage under the project object
+ * - All annotations stored in localStorage + optional cloud sync
  */
 
 function setupAnnotationCanvas() {
@@ -486,7 +655,10 @@ function setupAnnotationCanvas() {
 
 function saveAnnotation() {
   const comment = document.getElementById('commentText').value.trim();
-  if (!comment) { alert('Please write a comment before saving.'); return; }
+  if (!comment) {
+    alert('Please write a comment before saving.');
+    return;
+  }
   if (!pendingAnnotation) return;
 
   const project = getProject(currentProjectId);
@@ -608,18 +780,23 @@ function submitDecision(decision) {
 /** Escape HTML to prevent XSS */
 function escapeHTML(str) {
   if (!str) return '';
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 /* ==================== PAGE INIT ==================== */
 
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
+  await hydrateFromCloud();
+
   // Homepage
   if (document.getElementById('galleryGrid')) {
     renderGallery();
   }
 
-  // Admin page: setup done inline via <script> in admin.html
+  // Admin page
+  if (document.getElementById('adminContent')) {
+    loadCloudSettingsUI();
+  }
 
   // Client page: setup done inline via <script> in client.html
 });

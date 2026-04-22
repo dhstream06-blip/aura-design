@@ -32,6 +32,34 @@
   <!-- Admin Content (hidden until password verified) -->
   <div id="adminContent" style="display:none">
 
+
+    <!-- Public Storage Sync -->
+    <section class="admin-section">
+      <div class="section-header">
+        <span class="section-label">Public Storage</span>
+        <h2 class="section-title">Internet Sync (GitHub Gist)</h2>
+      </div>
+
+      <div class="upload-card glass-card">
+        <p class="link-note" style="margin-bottom:16px;">Use a public GitHub Gist named <strong>projects.json</strong> to make uploads visible on all devices. The token is stored only in your browser.</p>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Public Gist ID</label>
+            <input type="text" id="gistIdInput" class="form-input" placeholder="e.g. a1b2c3d4e5f6..." />
+          </div>
+          <div class="form-group">
+            <label class="form-label">GitHub Token (for upload sync)</label>
+            <input type="password" id="gistTokenInput" class="form-input" placeholder="ghp_..." />
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn-outline" onclick="testCloudConnection()">Test Connection</button>
+          <button class="btn-primary" onclick="saveCloudSettings()">Save Cloud Settings</button>
+        </div>
+        <p class="link-note" id="cloudStatus" style="margin-top:12px;">Cloud sync not configured yet.</p>
+      </div>
+    </section>
+
     <!-- Upload Section -->
     <section class="admin-section">
       <div class="section-header">
