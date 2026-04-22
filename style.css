@@ -6,16 +6,16 @@
 
 /* --- Design Tokens --- */
 :root {
-  --bg: #080810;
+  --bg: #090507;
   --surface: rgba(255,255,255,0.04);
   --surface-hover: rgba(255,255,255,0.07);
   --glass: rgba(255,255,255,0.05);
   --glass-border: rgba(255,255,255,0.09);
   --glass-shadow: 0 8px 48px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08);
 
-  --accent: #c8a97a;
-  --accent-dim: rgba(200,169,122,0.15);
-  --accent-glow: 0 0 24px rgba(200,169,122,0.25);
+  --accent: #8f1d2c;
+  --accent-dim: rgba(143,29,44,0.2);
+  --accent-glow: 0 0 24px rgba(143,29,44,0.35);
 
   --text-primary: rgba(255,255,255,0.92);
   --text-secondary: rgba(255,255,255,0.45);
@@ -66,19 +66,19 @@ input, textarea { font-family: var(--font-ui); }
 }
 .orb-1 {
   width: 600px; height: 600px;
-  background: radial-gradient(circle, rgba(200,169,122,0.08) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(143,29,44,0.2) 0%, transparent 70%);
   top: -200px; right: -100px;
   animation: orbFloat1 18s ease-in-out infinite alternate;
 }
 .orb-2 {
   width: 500px; height: 500px;
-  background: radial-gradient(circle, rgba(100,130,200,0.06) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(68,18,26,0.28) 0%, transparent 70%);
   bottom: 100px; left: -150px;
   animation: orbFloat2 22s ease-in-out infinite alternate;
 }
 .orb-3 {
   width: 400px; height: 400px;
-  background: radial-gradient(circle, rgba(180,100,200,0.04) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(120,24,38,0.18) 0%, transparent 70%);
   top: 40%; left: 40%;
   animation: orbFloat3 26s ease-in-out infinite alternate;
 }
@@ -110,7 +110,7 @@ input, textarea { font-family: var(--font-ui); }
 }
 .logo-mark {
   width: 36px; height: 36px;
-  background: linear-gradient(135deg, var(--accent), rgba(200,169,122,0.5));
+  background: linear-gradient(135deg, var(--accent), #4a0d17);
   border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
   font-family: var(--font-display);
@@ -157,7 +157,7 @@ input, textarea { font-family: var(--font-ui); }
 }
 .btn-admin:hover {
   color: var(--accent);
-  border-color: rgba(200,169,122,0.4);
+  border-color: rgba(143,29,44,0.45);
   background: var(--accent-dim);
   box-shadow: var(--accent-glow);
 }
@@ -165,15 +165,15 @@ input, textarea { font-family: var(--font-ui); }
   display: inline-flex; align-items: center; gap: 8px;
   font-size: 14px; font-weight: 600; letter-spacing: 0.05em;
   padding: 14px 32px;
-  background: linear-gradient(135deg, var(--accent), #b8955a);
-  color: #0a0a12;
+  background: linear-gradient(135deg, var(--accent), #6c1421);
+  color: #f4e9ea;
   border-radius: 100px;
   transition: all var(--transition);
-  box-shadow: 0 4px 24px rgba(200,169,122,0.3);
+  box-shadow: 0 4px 24px rgba(143,29,44,0.35);
 }
 .btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 32px rgba(200,169,122,0.4);
+  box-shadow: 0 8px 32px rgba(143,29,44,0.5);
 }
 .btn-primary.small { padding: 10px 22px; font-size: 13px; }
 .btn-primary.wide { width: 100%; justify-content: center; margin-top: 8px; }
@@ -218,7 +218,7 @@ input, textarea { font-family: var(--font-ui); }
   backdrop-filter: blur(12px);
   transition: all var(--transition);
 }
-.btn-download:hover { color: var(--accent); border-color: rgba(200,169,122,0.4); }
+.btn-download:hover { color: var(--accent); border-color: rgba(143,29,44,0.45); }
 
 /* --- Glass Card --- */
 .glass-card {
