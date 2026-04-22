@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aura Design — Portfolio</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Syne:wght@400;600;800&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- Ambient background orbs -->
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-orb orb-3"></div>
+  <div class="noise-overlay"></div>
+
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="nav-logo">
+      <span class="logo-mark">A</span>
+      <span class="logo-text">Aura Design</span>
+    </div>
+    <div class="nav-actions">
+      <button class="btn-admin" onclick="openAdminModal()">Admin Access</button>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="hero">
+    <div class="hero-label">Creative Portfolio</div>
+    <h1 class="hero-title">
+      <span class="title-line">Design that</span>
+      <span class="title-line accent">speaks volumes</span>
+    </h1>
+    <p class="hero-sub">A curated collection of visual work, brand identities, and digital experiences.</p>
+    <div class="hero-divider"></div>
+  </header>
+
+  <!-- Gallery Section -->
+  <main class="gallery-section">
+    <div class="section-header">
+      <span class="section-label">Selected Work</span>
+      <h2 class="section-title">Projects</h2>
+    </div>
+
+    <!-- Dynamic project grid rendered by JS -->
+    <div class="gallery-grid" id="galleryGrid">
+      <!-- Empty state shown when no projects -->
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon"></div>
+        <p class="empty-title">No projects yet</p>
+        <p class="empty-sub">Upload your first design through the admin panel.</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-logo">Aura Design</div>
+    <p class="footer-copy">Crafted with precision. All rights reserved.</p>
+  </footer>
+
+  <!-- Admin Password Modal -->
+  <div class="modal-backdrop" id="adminModal">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeAdminModal()">&#x2715;</button>
+      <div class="modal-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </div>
+      <h3 class="modal-title">Admin Access</h3>
+      <p class="modal-sub">Enter your access code to continue</p>
+      <div class="input-group">
+        <input type="password" id="adminPassword" class="modal-input" placeholder="Access code" maxlength="10" />
+        <div class="input-line"></div>
+      </div>
+      <div class="modal-error" id="modalError">Incorrect access code</div>
+      <button class="btn-primary" onclick="checkAdminPassword()">Unlock</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

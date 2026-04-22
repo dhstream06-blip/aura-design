@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aura Design — Admin</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Syne:wght@400;600;800&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-orb orb-3"></div>
+  <div class="noise-overlay"></div>
+
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="nav-logo">
+      <a href="index.html" class="nav-back">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+      </a>
+      <span class="logo-mark">A</span>
+      <span class="logo-text">Admin Dashboard</span>
+    </div>
+    <button class="btn-danger" onclick="adminLogout()">Log Out</button>
+  </nav>
+
+  <!-- Admin Content (hidden until password verified) -->
+  <div id="adminContent" style="display:none">
+
+    <!-- Upload Section -->
+    <section class="admin-section">
+      <div class="section-header">
+        <span class="section-label">Upload</span>
+        <h2 class="section-title">New Project</h2>
+      </div>
+
+      <div class="upload-card glass-card">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Project Title</label>
+            <input type="text" id="projectTitle" class="form-input" placeholder="e.g. Brand Identity — Studio K" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Client Name</label>
+            <input type="text" id="clientName" class="form-input" placeholder="e.g. Studio K" />
+          </div>
+        </div>
+
+        <!-- Drag & Drop Upload Zone -->
+        <div class="upload-zone" id="uploadZone">
+          <div class="upload-zone-inner">
+            <div class="upload-icon">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+            </div>
+            <p class="upload-text">Drag & drop your file here</p>
+            <p class="upload-sub">or click to browse — PNG, JPG, PDF supported</p>
+            <input type="file" id="fileInput" accept="image/*,.pdf" hidden />
+            <button class="btn-outline" onclick="document.getElementById('fileInput').click()">Browse Files</button>
+          </div>
+        </div>
+
+        <!-- File Preview -->
+        <div class="file-preview" id="filePreview" style="display:none">
+          <div class="preview-thumb" id="previewThumb"></div>
+          <div class="preview-info">
+            <span class="preview-name" id="previewName"></span>
+            <button class="btn-text" onclick="clearFile()">Remove</button>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn-primary" onclick="uploadProject()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/><path d="M5 21h14"/></svg>
+            Publish Project
+          </button>
+        </div>
+
+        <!-- Generated Link Display -->
+        <div class="link-result" id="linkResult" style="display:none">
+          <div class="link-result-inner">
+            <span class="link-label">Client Link Generated</span>
+            <div class="link-box">
+              <span class="link-url" id="generatedLink"></span>
+              <button class="btn-copy" onclick="copyLink()" id="copyBtn">Copy</button>
+            </div>
+            <p class="link-note">Share this link with your client. They can view, approve, or request changes.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Projects Management -->
+    <section class="admin-section">
+      <div class="section-header">
+        <span class="section-label">Management</span>
+        <h2 class="section-title">All Projects</h2>
+      </div>
+      <div class="admin-grid" id="adminGrid">
+        <div class="empty-state" id="adminEmptyState">
+          <p class="empty-title">No projects uploaded yet</p>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Password Gate (shown first) -->
+  <div class="password-gate" id="passwordGate">
+    <div class="gate-card glass-card">
+      <div class="gate-logo">
+        <span class="logo-mark large">A</span>
+      </div>
+      <h2 class="gate-title">Admin Portal</h2>
+      <p class="gate-sub">Enter your access code to manage projects</p>
+      <div class="input-group">
+        <input type="password" id="gatePassword" class="modal-input" placeholder="Access code" maxlength="10"
+          onkeydown="if(event.key==='Enter') checkGatePassword()" />
+        <div class="input-line"></div>
+      </div>
+      <div class="modal-error" id="gateError">Incorrect access code</div>
+      <button class="btn-primary wide" onclick="checkGatePassword()">Enter Dashboard</button>
+      <a href="index.html" class="btn-text center">Back to Portfolio</a>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal-backdrop" id="deleteModal" style="display:none">
+    <div class="modal-card">
+      <h3 class="modal-title">Delete Project</h3>
+      <p class="modal-sub">This cannot be undone. The client link will also stop working.</p>
+      <div class="modal-actions">
+        <button class="btn-outline" onclick="closeDeleteModal()">Cancel</button>
+        <button class="btn-danger" onclick="confirmDelete()">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    // Admin page init — check session, load projects
+    window.addEventListener('DOMContentLoaded', () => {
+      if (sessionStorage.getItem('aura_admin') === '1') {
+        showAdminContent();
+      }
+      setupUploadZone();
+    });
+  </script>
+</body>
+</html>

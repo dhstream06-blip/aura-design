@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aura Design — Client Review</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Syne:wght@400;600;800&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-orb orb-3"></div>
+  <div class="noise-overlay"></div>
+
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="nav-logo">
+      <span class="logo-mark">A</span>
+      <span class="logo-text">Aura Design</span>
+    </div>
+    <div class="nav-badge" id="statusBadge"></div>
+  </nav>
+
+  <!-- Project Not Found -->
+  <div class="not-found" id="notFound" style="display:none">
+    <h2>Project not found</h2>
+    <p>This link may be invalid or the project has been removed.</p>
+    <a href="index.html" class="btn-primary">Return to Portfolio</a>
+  </div>
+
+  <!-- Client Review Content -->
+  <div id="clientContent" style="display:none">
+
+    <!-- Project Header -->
+    <header class="client-header">
+      <div class="client-meta">
+        <span class="section-label">Design Review</span>
+        <h1 class="client-title" id="clientTitle"></h1>
+        <p class="client-sub">Click anywhere on the design below to add annotation markers and feedback.</p>
+      </div>
+      <div class="client-actions">
+        <button class="btn-download" id="downloadBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download
+        </button>
+      </div>
+    </header>
+
+    <!-- Annotation Canvas Wrapper -->
+    <section class="annotation-section">
+      <div class="annotation-toolbar">
+        <div class="toolbar-left">
+          <span class="toolbar-label">Annotation Mode</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="annotationToggle" checked />
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          </label>
+        </div>
+        <div class="toolbar-right">
+          <span class="marker-count" id="markerCount">0 annotations</span>
+          <button class="btn-text" onclick="clearAnnotations()">Clear all</button>
+        </div>
+      </div>
+
+      <!-- The design image with annotation overlay -->
+      <div class="design-wrapper" id="designWrapper">
+        <div class="design-canvas" id="designCanvas">
+          <!-- Image or PDF embed injected here by JS -->
+          <div id="designMedia"></div>
+          <!-- Annotation markers rendered here -->
+          <div class="markers-layer" id="markersLayer"></div>
+        </div>
+      </div>
+
+      <!-- Annotation Comment Popup -->
+      <div class="comment-popup" id="commentPopup" style="display:none">
+        <div class="popup-inner glass-card">
+          <div class="popup-header">
+            <span class="popup-label">Add Note</span>
+            <button class="popup-close" onclick="closeCommentPopup()">&#x2715;</button>
+          </div>
+          <textarea class="popup-textarea" id="commentText" placeholder="Describe what needs changing at this point..."></textarea>
+          <div class="popup-actions">
+            <button class="btn-text" onclick="closeCommentPopup()">Cancel</button>
+            <button class="btn-primary small" onclick="saveAnnotation()">Save Note</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Marker Detail View -->
+      <div class="marker-detail" id="markerDetail" style="display:none">
+        <div class="detail-inner glass-card">
+          <div class="detail-header">
+            <span class="detail-num" id="detailNum"></span>
+            <button class="popup-close" onclick="closeMarkerDetail()">&#x2715;</button>
+          </div>
+          <p class="detail-comment" id="detailComment"></p>
+          <button class="btn-danger small" onclick="deleteAnnotation()">Remove</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Feedback Panel -->
+    <section class="feedback-section">
+      <div class="feedback-card glass-card">
+        <h3 class="feedback-title">Submit Your Decision</h3>
+        <p class="feedback-sub">Review all annotations above before submitting. Your feedback will be saved and visible to the designer.</p>
+
+        <div class="feedback-name-row">
+          <div class="form-group">
+            <label class="form-label">Your Name (optional)</label>
+            <input type="text" id="clientNameInput" class="form-input" placeholder="e.g. Anna M." />
+          </div>
+        </div>
+
+        <div class="decision-row">
+          <button class="decision-btn approve" id="approveBtn" onclick="submitDecision('approved')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            Approved
+          </button>
+          <button class="decision-btn changes" id="changesBtn" onclick="submitDecision('changes')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Needs Changes
+          </button>
+        </div>
+
+        <div class="feedback-submitted" id="feedbackSubmitted" style="display:none">
+          <div class="submitted-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>
+          </div>
+          <p class="submitted-text" id="submittedText"></p>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    // Init client page on load
+    window.addEventListener('DOMContentLoaded', () => {
+      initClientPage();
+    });
+  </script>
+</body>
+</html>
