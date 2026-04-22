@@ -92,7 +92,7 @@ function createGalleryCard(project) {
       ${thumbHTML}
       <div class="card-overlay"></div>
       <div class="card-overlay-actions">
-        <a href="client.html?id=${project.id}" class="btn-primary small">View Project</a>
+        <a href="client.html?id=${project.id}" class="btn-primary small">View Flyer</a>
       </div>
     </div>
     <div class="card-body">
@@ -187,6 +187,7 @@ function setupUploadZone() {
 }
 
 let selectedFile = null;
+let selectedPublicUrl = '';
 
 function handleFileSelected(file) {
   const allowed = ['image/png','image/jpeg','image/gif','image/webp','image/svg+xml','application/pdf'];
@@ -232,21 +233,29 @@ function clearFile() {
 function uploadProject() {
   const title = document.getElementById('projectTitle').value.trim();
   const clientName = document.getElementById('clientName').value.trim();
+  const publicUrlInput = document.getElementById('publicFileUrl');
+  selectedPublicUrl = publicUrlInput ? publicUrlInput.value.trim() : '';
 
-  if (!title) { alert('Please enter a project title.'); return; }
-  if (!selectedFile) { alert('Please select a file to upload.'); return; }
+  if (!title) { alert('Please enter a flyer title.'); return; }
+  if (!selectedFile && !selectedPublicUrl) {
+    alert('Please select a file to upload or paste a public flyer URL.');
+    return;
+  }
 
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const fileData = e.target.result;
+  if (selectedPublicUrl && !/^https?:\/\/.+/i.test(selectedPublicUrl)) {
+    alert('Please enter a valid public URL that starts with http:// or https://');
+    return;
+  }
+
+  const publishProject = (fileData, fileType, fileName) => {
     const id = generateId();
     const project = {
       id,
       title,
       clientName,
       fileData,
-      fileType: selectedFile.type.startsWith('image/') ? 'image' : 'pdf',
-      fileName: selectedFile.name,
+      fileType,
+      fileName,
       status: 'pending',
       published: true,
       createdAt: Date.now(),
@@ -267,9 +276,25 @@ function uploadProject() {
     // Reset form
     document.getElementById('projectTitle').value = '';
     document.getElementById('clientName').value = '';
+    if (publicUrlInput) publicUrlInput.value = '';
     clearFile();
 
     renderAdminGrid();
+  };
+
+  if (selectedPublicUrl) {
+    const isPdf = selectedPublicUrl.toLowerCase().includes('.pdf');
+    publishProject(selectedPublicUrl, isPdf ? 'pdf' : 'image', selectedPublicUrl.split('/').pop() || 'public-file');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    publishProject(
+      e.target.result,
+      selectedFile.type.startsWith('image/') ? 'image' : 'pdf',
+      selectedFile.name
+    );
   };
   reader.readAsDataURL(selectedFile);
 }

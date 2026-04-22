@@ -36,18 +36,25 @@
     <section class="admin-section">
       <div class="section-header">
         <span class="section-label">Upload</span>
-        <h2 class="section-title">New Project</h2>
+        <h2 class="section-title">New Flyer</h2>
       </div>
 
       <div class="upload-card glass-card">
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Project Title</label>
-            <input type="text" id="projectTitle" class="form-input" placeholder="e.g. Brand Identity — Studio K" />
+            <input type="text" id="projectTitle" class="form-input" placeholder="e.g. New Flyer — Summer Promo" />
           </div>
           <div class="form-group">
             <label class="form-label">Client Name</label>
             <input type="text" id="clientName" class="form-input" placeholder="e.g. Studio K" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Public Flyer URL (optional)</label>
+            <input type="url" id="publicFileUrl" class="form-input" placeholder="https://example.com/flyer.jpg or .pdf" />
           </div>
         </div>
 
@@ -59,7 +66,7 @@
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
               </svg>
             </div>
-            <p class="upload-text">Drag & drop your file here</p>
+            <p class="upload-text">Drag & drop your flyer file here</p>
             <p class="upload-sub">or click to browse — PNG, JPG, PDF supported</p>
             <input type="file" id="fileInput" accept="image/*,.pdf" hidden />
             <button class="btn-outline" onclick="document.getElementById('fileInput').click()">Browse Files</button>
@@ -78,7 +85,7 @@
         <div class="form-actions">
           <button class="btn-primary" onclick="uploadProject()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/><path d="M5 21h14"/></svg>
-            Publish Project
+            Publish Flyer
           </button>
         </div>
 
@@ -90,7 +97,7 @@
               <span class="link-url" id="generatedLink"></span>
               <button class="btn-copy" onclick="copyLink()" id="copyBtn">Copy</button>
             </div>
-            <p class="link-note">Share this link with your client. They can view, approve, or request changes.</p>
+            <p class="link-note">Share this public link. Flyers added with a public URL can be opened from phone, PC, or any device.</p>
           </div>
         </div>
       </div>
@@ -100,11 +107,11 @@
     <section class="admin-section">
       <div class="section-header">
         <span class="section-label">Management</span>
-        <h2 class="section-title">All Projects</h2>
+        <h2 class="section-title">All Flyers</h2>
       </div>
       <div class="admin-grid" id="adminGrid">
         <div class="empty-state" id="adminEmptyState">
-          <p class="empty-title">No projects uploaded yet</p>
+          <p class="empty-title">No flyers uploaded yet</p>
         </div>
       </div>
     </section>
@@ -133,8 +140,8 @@
   <!-- Delete Confirmation Modal -->
   <div class="modal-backdrop" id="deleteModal" style="display:none">
     <div class="modal-card">
-      <h3 class="modal-title">Delete Project</h3>
-      <p class="modal-sub">This cannot be undone. The client link will also stop working.</p>
+      <h3 class="modal-title">Delete Flyer</h3>
+      <p class="modal-sub">This cannot be undone. The public review link will also stop working.</p>
       <div class="modal-actions">
         <button class="btn-outline" onclick="closeDeleteModal()">Cancel</button>
         <button class="btn-danger" onclick="confirmDelete()">Delete</button>

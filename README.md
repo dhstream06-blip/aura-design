@@ -26,6 +26,11 @@
 5. Client can add annotations (click anywhere on design), then approve or request changes
 6. All data saved in browser localStorage — no backend needed
 
+### Public Flyer URLs (Cross-device support)
+- In the admin panel, you can now paste a **public URL** (image or PDF) instead of uploading a local file.
+- If you use a public URL, the same flyer can be viewed from phone, PC, and other devices because the media is hosted online.
+- Local uploads still remain browser-local due to localStorage constraints.
+
 ## Annotation System
 - Client clicks anywhere on the design image to place a numbered marker
 - A popup appears to type a comment for that exact location
