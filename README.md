@@ -1,44 +1,45 @@
-# Aura Design — Setup Guide
+# Aura Design (Next.js + Supabase)
 
-## Files
-- `index.html` — Public portfolio homepage
-- `admin.html` — Password-protected admin dashboard  
-- `client.html` — Client review page (accessed via unique link)
-- `style.css` — All styles (glassmorphism dark UI)
-- `script.js` — All logic (auth, uploads, gallery, annotations)
+A polished single-page flyer wall:
+- centered logo + clean hero section
+- upload image to Supabase Storage bucket
+- save public image URL in Supabase table
+- everyone can view uploaded images
 
-## GitHub Pages Deployment
-1. Create a new GitHub repository
-2. Upload all 5 files to the root of the repo
-3. Go to Settings → Pages → Source: `main` branch / `root`
-4. Your site will be at: `https://yourusername.github.io/repo-name/`
+## 1) Install & run
 
-## Admin Access
-- Visit `yoursite/admin.html`
-- Password: **1040**
-- Or click "Admin Access" on the homepage
+```bash
+npm install
+cp .env.example .env.local
+npm run dev
+```
 
-## How the Client Link System Works
-1. Admin uploads a design + sets title/client name
-2. A unique ID is generated: `Date.now() + random string`
-3. The client link is: `yoursite/client.html?id=UNIQUE_ID`
-4. The client page reads the `?id=` param and loads from localStorage
-5. Client can add annotations (click anywhere on design), then approve or request changes
-6. All data saved in browser localStorage — no backend needed
+## 2) Supabase setup
 
-### Public Flyer URLs (Cross-device support)
-- In the admin panel, you can now paste a **public URL** (image or PDF) instead of uploading a local file.
-- If you use a public URL, the same flyer can be viewed from phone, PC, and other devices because the media is hosted online.
-- Local uploads still remain browser-local due to localStorage constraints.
+In Supabase SQL editor, run:
 
-## Annotation System
-- Client clicks anywhere on the design image to place a numbered marker
-- A popup appears to type a comment for that exact location
-- Markers are stored as `{ x%, y%, comment }` — position is percentage-based so it works on any screen size
-- Admin can see annotation count and client decision in the admin dashboard
+```sql
+-- see full file in supabase/schema.sql
+create table if not exists public.flyers (
+  id uuid primary key default gen_random_uuid(),
+  image_url text not null,
+  created_at timestamptz not null default now()
+);
+```
 
-## Limitations (No-backend constraints)
-- All data lives in localStorage — clearing browser storage will erase projects
-- Files are stored as base64 strings — keep uploads under ~5MB for best performance
-- Each browser/device has its own storage — share the link across devices will show the project only if they're on the same browser that uploaded
-- For production use, connect to a backend (Supabase, Firebase) to persist data server-side
+Then create a **public** storage bucket called `flyers`.
+
+Add `.env.local` values:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+```
+
+## 3) Storage policies (required)
+
+In Supabase Storage policies for bucket `flyers`:
+- allow `anon` to `SELECT`
+- allow `anon` to `INSERT`
+
+This matches your request: upload once, image stays, and everyone can see it.
